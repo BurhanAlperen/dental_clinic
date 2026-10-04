@@ -120,8 +120,8 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları takip 
 
 ### 1. Depoyu Klonlayın
 ```bash
-git clone https://github.com/KULLANICI_ADINIZ/REPO_ADINIZ.git
-cd "Turhal Dis Klinigi V2"
+git clone https://github.com/BurhanAlperen/dental_clinic.git
+cd dental_clinic
 ```
 
 ### 2. Bağımlılıkları Yükleyin
