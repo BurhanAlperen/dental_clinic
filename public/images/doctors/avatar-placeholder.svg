@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdf9" />
+      <stop offset="50%" stop-color="#e2f7f4" />
+      <stop offset="100%" stop-color="#cceee8" />
+    </linearGradient>
+    <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00b4d8" />
+      <stop offset="100%" stop-color="#0a1628" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#bgGrad)" />
+  
+  <!-- Subtle circular frame -->
+  <circle cx="200" cy="200" r="150" fill="none" stroke="#00b4d8" stroke-width="2" stroke-dasharray="6 6" opacity="0.4" />
+  <circle cx="200" cy="200" r="140" fill="#ffffff" opacity="0.6" />
+
+  <!-- Avatar Doctor Silhouette -->
+  <g transform="translate(0, 15)">
+    <!-- Head -->
+    <circle cx="200" cy="155" r="55" fill="url(#avatarGrad)" opacity="0.85" />
+    <!-- Stethoscope / Medical collar cue -->
+    <path d="M 175 195 C 175 220, 225 220, 225 195" fill="none" stroke="#00b4d8" stroke-width="5" stroke-linecap="round" />
+    <circle cx="200" cy="230" r="7" fill="#00b4d8" />
+    <path d="M 200 215 L 200 230" stroke="#00b4d8" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Body / Shoulders -->
+    <path d="M 105 315 C 105 245, 145 225, 200 225 C 255 225, 295 245, 295 315 Z" fill="url(#avatarGrad)" opacity="0.85" />
+    <!-- Doctor Coat Lapels -->
+    <path d="M 180 230 L 200 280 L 220 230" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

@@ -1,0 +1,118 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  text-decoration: none;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Sizes */
+.sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-lg);
+}
+
+.md {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-base);
+}
+
+.lg {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--text-lg);
+}
+
+/* Variants */
+.primary {
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-dark) 100%);
+  color: var(--color-white);
+  box-shadow: var(--shadow-teal);
+}
+
+.primary:hover {
+  box-shadow: 0 6px 20px rgba(0, 180, 216, 0.35);
+  transform: translateY(-2px);
+}
+
+.secondary {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.secondary:hover {
+  background: var(--color-navy-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.outline {
+  background: transparent;
+  color: var(--color-navy);
+  border-color: var(--color-gray-200);
+}
+
+.outline:hover {
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+  background: var(--color-teal-glow);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-gray-600);
+}
+
+.ghost:hover {
+  color: var(--color-teal);
+  background: var(--color-teal-glow);
+}
+
+.white {
+  background: var(--color-white);
+  color: var(--color-navy);
+  box-shadow: var(--shadow-md);
+}
+
+.white:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Icon */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Full Width */
+.fullWidth {
+  width: 100%;
+}

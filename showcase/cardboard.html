@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Özel Turhal Ağız ve Diş Sağlığı Polikliniği - Tasarım Kartonu</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --color-navy: #0a1628;
+      --color-teal: #00b4d8;
+      --color-mint: #e8faf5;
+      --color-gray: #6b7280;
+      --color-light-bg: #f8fafb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      body {
+        background-color: white;
+      }
+      .page {
+        width: 297mm;
+        height: 210mm;
+        margin: 0;
+        border: none;
+        page-break-after: always;
+      }
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--color-navy);
+      background-color: var(--color-light-bg);
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 297mm;
+      height: 210mm;
+      padding: 20mm;
+      page-break-after: always;
+      position: relative;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* Top header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--color-mint);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-mark {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, var(--color-teal), #0096b7);
+      border-radius: 6px;
+    }
+
+    .brand-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+
+    .brand-text p {
+      font-size: 10px;
+      color: var(--color-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--color-teal);
+      text-align: right;
+    }
+
+    /* Main gallery display */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .image-showcase {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid #dde1e6;
+      object-fit: contain;
+      max-height: 120mm;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-2 .image-showcase {
+      max-height: 110mm;
+    }
+
+    .meta-details {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      font-size: 12px;
+      color: var(--color-gray);
+    }
+
+    .meta-tag {
+      background: var(--color-mint);
+      color: #0096b7;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    /* Footer info */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #eef0f2;
+      padding-top: 15px;
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--color-gray);
+    }
+
+    .footer-right {
+      font-weight: 600;
+      color: var(--color-navy);
+    }
+
+    /* Cover Page specifically */
+    .cover-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 40px;
+    }
+
+    .cover-subtitle {
+      color: var(--color-teal);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 15px;
+    }
+
+    .cover-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      line-height: 1.2;
+      margin-bottom: 25px;
+      color: var(--color-navy);
+    }
+
+    .cover-desc {
+      max-width: 600px;
+      color: var(--color-gray);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+      width: 100%;
+      max-width: 800px;
+      border-top: 1px solid #eef0f2;
+      padding-top: 30px;
+    }
+
+    .spec-item h4 {
+      font-size: 12px;
+      color: var(--color-gray);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .spec-item p {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-navy);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: COVER -->
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="logo-mark"></div>
+        <div class="brand-text">
+          <h1>Özel Turhal Diş Polikliniği</h1>
+          <p>Tasarım & Deneyim Sunumu</p>
+        </div>
+      </div>
+      <div class="page-title">PROJE KARTONU</div>
+    </div>
+
+    <div class="cover-content">
+      <span class="cover-subtitle">Dijital Dönüşüm Sunumu</span>
+      <h2 class="cover-title">Premium Web Tasarım Projesi</h2>
+      <p class="cover-desc">
+        Özel Turhal Ağız ve Diş Sağlığı Polikliniği için özel olarak kurgulanan ferah beyaz alanlar, 
+        estetik serif tipografi ve hızlı dönüşüm odaklı mobil entegrasyonu sunan yeni nesil arayüz konsepti.
+      </p>
+
+      <div class="spec-grid">
+        <div class="spec-item">
+          <h4>Tipografi</h4>
+          <p>Playfair & Inter</p>
+        </div>
+        <div class="spec-item">
+          <h4>Vurgu Rengi</h4>
+          <p>Turkuaz & Mint</p>
+        </div>
+        <div class="spec-item">
+          <h4>Teknoloji</h4>
+          <p>Next.js 14 App Router</p>
+        </div>
+        <div class="spec-item">
+          <h4>Dönüşüm</h4>
+          <p>WhatsApp & Direct Call</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Telif Hakkı © 2026. Tüm Hakları Saklıdır.</span>
+      <span class="footer-right">SAYFA 1 / 4</span>
+    </div>
+  </div>
+
+  <!-- PAGE 2: HERO SECTION -->
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="logo-mark"></div>
+        <div class="brand-text">
+          <h1>Özel Turhal Diş Polikliniği</h1>
+          <p>Tasarım & Deneyim Sunumu</p>
+        </div>
+      </div>
+      <div class="page-title">KARŞILAMA (HERO) ARAYÜZÜ</div>
+    </div>
+
+    <div class="content">
+      <img src="hero.png" class="image-showcase" alt="Hero Section Showcase">
+      <div class="meta-details">
+        <span class="meta-tag">Hero Section / Ana Sayfa Giriş</span>
+        <span>Açıklama: İki sütunlu premium yerleşim, yüzen hızlı arama kartı ve yumuşak geçiş efektleri.</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Telif Hakkı © 2026. Tüm Hakları Saklıdır.</span>
+      <span class="footer-right">SAYFA 2 / 4</span>
+    </div>
+  </div>
+
+  <!-- PAGE 3: DOCTORS & REVIEWS -->
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="logo-mark"></div>
+        <div class="brand-text">
+          <h1>Özel Turhal Diş Polikliniği</h1>
+          <p>Tasarım & Deneyim Sunumu</p>
+        </div>
+      </div>
+      <div class="page-title">HEKİMLER & GÜVEN KARTLARI</div>
+    </div>
+
+    <div class="content">
+      <img src="doctors_reviews.png" class="image-showcase" alt="Doctors and Reviews Showcase">
+      <div class="meta-details">
+        <span class="meta-tag">Hekimler & Sosyal Kanıt</span>
+        <span>Açıklama: Uzman hekim kadrosu ve Google Business API entegrasyonlu canlı yorum sistemi.</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Telif Hakkı © 2026. Tüm Hakları Saklıdır.</span>
+      <span class="footer-right">SAYFA 3 / 4</span>
+    </div>
+  </div>
+
+  <!-- PAGE 4: LOCATION & LIGHTBOX -->
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="logo-mark"></div>
+        <div class="brand-text">
+          <h1>Özel Turhal Diş Polikliniği</h1>
+          <p>Tasarım & Deneyim Sunumu</p>
+        </div>
+      </div>
+      <div class="page-title">ETKİLEŞİMLİ GALERİ & KONUM</div>
+    </div>
+
+    <div class="content">
+      <div class="grid-2">
+        <img src="lightbox.png" class="image-showcase" alt="Gallery Lightbox Showcase">
+        <img src="location.png" class="image-showcase" alt="Location Map Showcase">
+      </div>
+      <div class="meta-details">
+        <span class="meta-tag">Arayüz Detayları</span>
+        <span>Açıklama: (Solda) İnteraktif filtreli galeri lightbox görünümü. (Sağda) Google Haritalar & Yol tarifi entegrasyonu.</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Telif Hakkı © 2026. Tüm Hakları Saklıdır.</span>
+      <span class="footer-right">SAYFA 4 / 4</span>
+    </div>
+  </div>
+
+</body>
+</html>

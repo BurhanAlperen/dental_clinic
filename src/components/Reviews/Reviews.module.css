@@ -1,0 +1,168 @@
+.reviews {
+  background: var(--color-white);
+}
+
+/* Trust Score */
+.trustScore {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-8);
+  background: var(--color-offwhite);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-gray-100);
+  margin-bottom: var(--space-10);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.trustLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.googleLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.trustInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.trustRating {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.ratingNumber {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.ratingMax {
+  font-size: var(--text-lg);
+  color: var(--color-gray-400);
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+}
+
+.reviewCount {
+  font-size: var(--text-sm);
+  color: var(--color-gray-500);
+}
+
+/* Review Grid */
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.reviewCard {
+  padding: var(--space-6);
+  background: var(--color-offwhite);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-gray-100);
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.reviewCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-dark) 100%);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+}
+
+.authorName {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.timeAgo {
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+}
+
+.reviewText {
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+  line-height: 1.7;
+  flex: 1;
+}
+
+.googleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+  margin-top: auto;
+}
+
+/* Bottom CTA */
+.bottomCta {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .reviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .trustScore {
+    padding: var(--space-5);
+    justify-content: center;
+    text-align: center;
+  }
+
+  .trustLeft {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .trustInfo {
+    align-items: center;
+  }
+}

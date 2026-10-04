@@ -1,66 +1,39 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { useState } from 'react';
+import Navbar from '@/components/Navbar/Navbar';
+import Hero from '@/components/Hero/Hero';
+import Services from '@/components/Services/Services';
+import Gallery from '@/components/Gallery/Gallery';
+import Doctors from '@/components/Doctors/Doctors';
+import Reviews from '@/components/Reviews/Reviews';
+import Location from '@/components/Location/Location';
+import Footer from '@/components/Footer/Footer';
+import AppointmentModal from '@/components/AppointmentModal/AppointmentModal';
+import MobileActionBar from '@/components/MobileActionBar/MobileActionBar';
 
 export default function Home() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <Navbar onAppointmentClick={openModal} />
+
+      <main>
+        <Hero onAppointmentClick={openModal} />
+        <Services />
+        <Gallery />
+        <Doctors onAppointmentClick={openModal} />
+        <Reviews />
+        <Location />
       </main>
-    </div>
+
+      <Footer />
+      <MobileActionBar onAppointmentClick={openModal} />
+      <AppointmentModal isOpen={isModalOpen} onClose={closeModal} />
+    </>
   );
 }

@@ -1,0 +1,333 @@
+.calendarContainer {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.titleIcon {
+  color: var(--color-teal);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0;
+}
+
+.navControls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.monthLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-navy);
+  min-width: 110px;
+  text-align: center;
+}
+
+.navBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  color: var(--color-gray-600);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.navBtn:hover:not(:disabled) {
+  background: var(--color-mint);
+  border-color: var(--color-teal);
+  color: var(--color-teal-dark);
+}
+
+.navBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Doctor Selection Guidance Banner */
+.selectDoctorBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-xs);
+  color: #475569;
+}
+
+.selectDoctorIcon {
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
+/* Doktorsitesi sync banner */
+.syncBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-xs);
+  color: #0f766e;
+}
+
+.syncPulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #14b8a6;
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.syncInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.syncTitle {
+  font-weight: 700;
+  color: #0f766e;
+  font-size: var(--text-xs);
+}
+
+.syncSub {
+  font-size: 11px;
+  color: #115e59;
+  opacity: 0.9;
+}
+
+.syncRefreshBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #99f6e4;
+  border-radius: var(--radius-lg);
+  color: #0d9488;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.syncRefreshBtn:hover:not(:disabled) {
+  background: #ccfbf1;
+  border-color: #5eead4;
+}
+
+.syncRefreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.syncSpinner {
+  animation: spin 1s linear infinite;
+  color: #0d9488;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Grid */
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.dayColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dayHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) var(--space-1);
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.dayHeaderActive {
+  background: var(--color-mint);
+  border-color: var(--color-teal);
+}
+
+.dayHeaderClosed {
+  background: var(--color-gray-100);
+  opacity: 0.7;
+}
+
+.dayName {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.dayDate {
+  font-size: 11px;
+  color: var(--color-gray-500);
+  font-weight: 500;
+}
+
+.slotsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slotBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  background: var(--color-white);
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.slotBtn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: scale(1.02);
+}
+
+.slotSelected {
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-dark) 100%) !important;
+  border-color: transparent !important;
+  color: var(--color-white) !important;
+  box-shadow: var(--shadow-teal);
+}
+
+.slotBooked {
+  background: var(--color-gray-100) !important;
+  border-color: var(--color-gray-200) !important;
+  color: var(--color-gray-400) !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.bookedTag {
+  position: absolute;
+  right: 4px;
+  font-size: 9px;
+  background: var(--color-gray-300);
+  color: var(--color-gray-700);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.closedBadge {
+  padding: var(--space-4) var(--space-2);
+  background: var(--color-gray-50);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+  font-style: italic;
+}
+
+.expandWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+.expandBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-teal-dark);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
+}
+
+.expandBtn:hover {
+  background: var(--color-mint);
+}
+
+.selectedSlotBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-mint);
+  border: 1px solid rgba(0, 180, 216, 0.2);
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  color: var(--color-teal-dark);
+  animation: fadeIn 0.3s ease;
+}
+
+.selectedIcon {
+  color: var(--color-teal-dark);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .calendarContainer {
+    padding: var(--space-4);
+  }
+
+  .daysGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
