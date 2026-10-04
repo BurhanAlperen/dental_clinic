@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/badge/React-19.2.4-blue?style=for-the-badge&logo=react" alt="React" />
   <img src="https://img.shields.io/badge/Turbopack-Enabled-0284c7?style=for-the-badge&logo=vercel" alt="Turbopack" />
   <img src="https://img.shields.io/badge/CSS-Modules-blueviolet?style=for-the-badge" alt="CSS Modules" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   <img src="https://img.shields.io/badge/Status-Production%20Ready-emerald?style=for-the-badge" alt="Status" />
 </p>
 
@@ -156,4 +157,6 @@ npm run start
 
 ## 📄 Lisans
 
-Bu proje Özel Turhal Ağız ve Diş Sağlığı Polikliniği için özel olarak geliştirilmiştir. Tüm hakları saklıdır.
+Bu proje **MIT Lisansı** altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına göz atabilirsiniz.
+
+Copyright © 2026 **Burhan Alperen Divarcı**. Tüm hakları saklıdır.
