@@ -69,6 +69,8 @@ export const CLINIC = {
       specialty: 'Genel Diş Hekimliği',
       bio: 'Dt. Yakup Aşar, hasta odaklı yaklaşımı ve modern tedavi yöntemleriyle kliniğimizde hizmet vermektedir.',
       image: '/images/doctors/avatar-placeholder.svg',
+      // Doktorsitesi live availability integration (server-side only — SSRF prevention)
+      doktorsitesiUserId: 6988,
     },
   ],
 

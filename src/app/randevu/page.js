@@ -66,7 +66,7 @@ function AppointmentContent() {
     setSelectedDoctor(null);
   }, [initialDoctorParam]);
 
-  // Fetch booked slots and Doktorsitesi live data with 30-minute sync support
+  // Fetch booked slots and Doktorsitesi live data
   const fetchSlotsAndSync = async (forceRefresh = false) => {
     try {
       // 1. Fetch local booked slots
@@ -82,12 +82,19 @@ function AppointmentContent() {
         const url = forceRefresh
           ? '/api/appointments/doktorsitesi?refresh=true'
           : '/api/appointments/doktorsitesi';
-        const resDoktorsitesi = await fetch(url);
-        if (resDoktorsitesi.ok) {
+
+        try {
+          const resDoktorsitesi = await fetch(url);
           const data = await resDoktorsitesi.json();
+          // Always set the response data (success or providerError)
           setDoktorsitesiData(data);
+        } catch (fetchErr) {
+          // Network-level failure
+          setDoktorsitesiData({ providerError: true, success: false });
+          console.error('[Doktorsitesi] Network error:', fetchErr);
+        } finally {
+          setIsLoadingSync(false);
         }
-        setIsLoadingSync(false);
       } else {
         setDoktorsitesiData(null);
       }
@@ -113,15 +120,13 @@ function AppointmentContent() {
     }
   }, [selectedDoctor]);
 
-  // 30-Minute Automatic Interval Polling
+  // 60-second auto-refresh poll for Yakup Aşar (matches cache TTL)
   useEffect(() => {
     if (selectedDoctor?.id !== 'yakup-asar') return;
 
-    // Run every 30 minutes (30 * 60 * 1000 ms)
     const interval = setInterval(() => {
-      console.log('[30-Min Auto Sync] Polling Doktorsitesi calendar...');
       fetchSlotsAndSync(true);
-    }, 30 * 60 * 1000);
+    }, 60 * 1000);
 
     return () => clearInterval(interval);
   }, [selectedDoctor]);

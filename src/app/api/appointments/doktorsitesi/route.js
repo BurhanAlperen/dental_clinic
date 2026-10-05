@@ -1,161 +1,178 @@
 import { NextResponse } from 'next/server';
+import { CLINIC } from '@/config/clinic';
 
 /**
- * Doktorsitesi Live Calendar Integration for Dt. Yakup Aşar
- * Synchronizes real-time available and booked slots from:
- * https://www.doktorsitesi.com/dt-yakup-asar/dis-hekimi/tokat
+ * Doktorsitesi Live Availability Provider – Dt. Yakup Aşar
  *
- * Configured with 30-minute auto-refresh cycle and live slot optimizer.
+ * Real API endpoint discovered from Doktorsitesi's frontend JS:
+ *   GET https://api.doktorsitesi.com/public/user/{userId}/available?isOnlineConsultation=0
+ *
+ * Response format:
+ *   { items: [{ date: "YYYY-MM-DD", times: [{ startTime, endTime, isblock }] }] }
+ *   isblock: 0 = available, 1 = blocked/busy
+ *
+ * Security: The Doktorsitesi userId is read ONLY from server-side config (CLINIC),
+ * never from any client-supplied input (SSRF prevention).
+ *
+ * Fail-safe: If Doktorsitesi is unreachable, we return HTTP 503 with a clear error.
+ * We NEVER fall back to "all slots open" — that would cause double-booking.
  */
 
-const DOKTORSITESI_URL = 'https://www.doktorsitesi.com/dt-yakup-asar/dis-hekimi/tokat';
-const SYNC_INTERVAL_MS = 30 * 60 * 1000; // 30 Minutes in milliseconds
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
-// Cache memory
-let cachedData = null;
-let lastSyncTimestamp = 0;
-
-// All standard slots on Doktorsitesi
-const DOKTORSITESI_ALL_SLOTS = [
-  '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00',
-  '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
-  '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'
-];
+// In-memory cache
+let _cache = null;
+let _cacheTimestamp = 0;
 
 /**
- * Real schedule mapped directly from Doktorsitesi calendar
- * Matches exact status:
- * - Day 0 (Bugün, 23 Eylül): 16:30, 19:00, 19:30, 20:00, 20:30, 21:00, 21:30, 22:00, 22:30 available.
- * - Day 1 (Yarın, 24 Eylül): 10:00-13:30 available, 14:00-18:30 busy, 19:00-22:30 available.
- * - Day 2 (Cum, 25 Eylül): 10:00-17:30 busy, 18:00-22:30 available.
- * - Day 3 (Cmt, 26 Eylül): 10:00-18:00 busy, 19:00-22:30 available.
+ * Parse the Doktorsitesi availability response into our internal format.
+ * Returns { scheduleByDate, allSlots } or throws on parse failure.
+ *
+ * scheduleByDate: { "YYYY-MM-DD": { available: ["HH:mm", ...], busy: ["HH:mm", ...] } }
  */
-function generateLiveSchedule() {
-  const scheduleByOffset = {
-    // Bugün (Day 0)
-    0: {
-      available: ['16:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'],
-      busy: ['09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '17:00', '17:30', '18:00', '18:30'],
-    },
-    // Yarın (Day 1)
-    1: {
-      available: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'],
-      busy: ['09:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30'],
-    },
-    // 2 Gün Sonra (Day 2 - Cuma)
-    2: {
-      available: ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'],
-      busy: ['09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'],
-    },
-    // 3 Gün Sonra (Day 3 - Cumartesi)
-    3: {
-      available: ['19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'],
-      busy: ['09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30'],
-    },
-  };
+function parseAvailabilityResponse(json) {
+  if (!json || !Array.isArray(json.items)) {
+    throw new Error('Doktorsitesi response missing "items" array');
+  }
 
-  // Generate busySlots flat array for backward-compatibility
-  const busySlots = [];
-  Object.keys(scheduleByOffset).forEach((offset) => {
-    scheduleByOffset[offset].busy.forEach((time) => {
-      busySlots.push({ dateOffset: Number(offset), time });
-    });
-  });
+  const scheduleByDate = {};
+  const allSlotsSet = new Set();
+
+  for (const dayItem of json.items) {
+    const { date, times } = dayItem;
+    if (!date || !Array.isArray(times)) {
+      console.warn('[Doktorsitesi] Unexpected day item format:', dayItem);
+      continue;
+    }
+
+    const available = [];
+    const busy = [];
+
+    for (const slot of times) {
+      const time = slot.startTime;
+      if (!time) continue;
+
+      allSlotsSet.add(time);
+
+      if (slot.isblock === 0) {
+        available.push(time);
+      } else {
+        busy.push(time);
+      }
+    }
+
+    scheduleByDate[date] = { available, busy };
+  }
 
   return {
-    scheduleByOffset,
-    busySlots,
-    allSlots: DOKTORSITESI_ALL_SLOTS,
+    scheduleByDate,
+    allSlots: [...allSlotsSet].sort(),
   };
 }
 
+/**
+ * Fetch fresh availability data from Doktorsitesi API.
+ * userId is sourced ONLY from the server-side CLINIC config.
+ */
+async function fetchFromDoktorsitesi(userId) {
+  const url = `https://api.doktorsitesi.com/public/user/${userId}/available?isOnlineConsultation=0`;
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept: 'application/json',
+      Referer: 'https://www.doktorsitesi.com/',
+      Origin: 'https://www.doktorsitesi.com',
+    },
+    // Do not use Next.js cache — we manage our own in-memory TTL
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Doktorsitesi API returned HTTP ${response.status}`);
+  }
+
+  const json = await response.json();
+  return parseAvailabilityResponse(json);
+}
+
+// GET: Return live availability data (with 60s in-memory cache)
 export async function GET(request) {
   try {
-    const now = Date.now();
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
+    const now = Date.now();
 
-    // 30-minute auto cache check
-    if (!cachedData || forceRefresh || now - lastSyncTimestamp > SYNC_INTERVAL_MS) {
-      let isLiveFetched = false;
+    // Resolve Yakup Aşar's Doktorsitesi userId from config (SSRF prevention)
+    const yakupDoctor = CLINIC.doctors.find((d) => d.id === 'yakup-asar');
+    const userId = yakupDoctor?.doktorsitesiUserId;
 
-      try {
-        const response = await fetch(DOKTORSITESI_URL, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8',
-          },
-          next: { revalidate: 1800 }, // 30 mins
-        });
-
-        if (response.ok) {
-          isLiveFetched = true;
-        }
-      } catch (fetchErr) {
-        console.warn('Doktorsitesi fetch notice:', fetchErr.message);
-      }
-
-      const schedule = generateLiveSchedule();
-
-      cachedData = {
-        success: true,
-        doctor: 'Dt. Yakup Aşar',
-        source: 'doktorsitesi.com',
-        sourceUrl: DOKTORSITESI_URL,
-        isLiveSynced: true,
-        syncIntervalMinutes: 30,
-        workingHours: {
-          start: '09:30',
-          end: '22:30',
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          providerError: true,
+          error:
+            'Dt. Yakup Aşar için Doktorsitesi kullanıcı kimliği yapılandırılmamış.',
         },
-        allSlots: schedule.allSlots,
-        scheduleByOffset: schedule.scheduleByOffset,
-        busySlots: schedule.busySlots,
-        lastSyncAt: new Date().toISOString(),
-        lastSyncTimestamp: now,
-        nextSyncAt: new Date(now + SYNC_INTERVAL_MS).toISOString(),
-      };
-
-      lastSyncTimestamp = now;
+        { status: 503 }
+      );
     }
 
-    return NextResponse.json(cachedData, {
+    // Serve from cache if fresh
+    if (!forceRefresh && _cache && now - _cacheTimestamp < CACHE_TTL_MS) {
+      return NextResponse.json({
+        ..._cache,
+        cached: true,
+        cacheAgeSeconds: Math.floor((now - _cacheTimestamp) / 1000),
+      });
+    }
+
+    // Fetch fresh data
+    const { scheduleByDate, allSlots } = await fetchFromDoktorsitesi(userId);
+
+    const payload = {
+      success: true,
+      doctor: 'Dt. Yakup Aşar',
+      source: 'doktorsitesi.com',
+      isLiveSynced: true,
+      cacheTtlSeconds: CACHE_TTL_MS / 1000,
+      allSlots,
+      scheduleByDate,
+      lastSyncAt: new Date().toISOString(),
+      nextSyncAt: new Date(now + CACHE_TTL_MS).toISOString(),
+      cached: false,
+    };
+
+    // Store in cache
+    _cache = payload;
+    _cacheTimestamp = now;
+
+    return NextResponse.json(payload, {
       headers: {
-        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=60',
+        'Cache-Control': 'no-store',
       },
     });
   } catch (error) {
-    console.error('Doktorsitesi sync error:', error);
+    console.error('[Doktorsitesi] Availability fetch error:', error.message);
+
+    // FAIL-SAFE: Return 503 — never expose all slots as available
     return NextResponse.json(
-      { success: false, error: 'Doktorsitesi verileri senkronize edilirken bir sorun oluştu.' },
-      { status: 500 }
+      {
+        success: false,
+        providerError: true,
+        error:
+          'Randevu saatleri şu anda güncellenemiyor. Lütfen birkaç saniye sonra tekrar deneyin.',
+        detail: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      },
+      { status: 503 }
     );
   }
 }
 
-// POST: Forward new booking and immediately synchronize
-export async function POST(request) {
-  try {
-    const data = await request.json();
-    const { date, time, firstName, lastName, phone, services } = data;
-
-    // Log the synchronization event
-    console.log(`[Doktorsitesi Sync 30-Min Realtime] Synced for Dt. Yakup Aşar on ${date} at ${time} (${firstName} ${lastName}). Services: ${services?.join(', ')}`);
-
-    return NextResponse.json({
-      success: true,
-      syncedWithDoktorsitesi: true,
-      sourceUrl: DOKTORSITESI_URL,
-      message: 'Randevu Doktorsitesi takvimi ile 30 dakikalık optimize döngüde senkronize edildi.',
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error('Doktorsitesi POST error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Doktorsitesi senkronizasyonu başarısız oldu.' },
-      { status: 500 }
-    );
-  }
+// POST: No-op — booking is handled by /api/appointments.
+// This endpoint is kept for backward compatibility but does nothing meaningful.
+export async function POST() {
+  return NextResponse.json({ success: true, message: 'Acknowledged.' });
 }

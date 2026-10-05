@@ -97,28 +97,26 @@ export default function AppointmentCalendar({
   }, [dayOffset]);
 
   // Check if a time slot is taken/booked
-  const isSlotBooked = (dateStr, timeStr, offsetIndex) => {
+  const isSlotBooked = (dateStr, timeStr) => {
     // 1. Check local booked appointments in Turhal clinic database
     const isLocallyBooked = bookedSlots.some(
       (b) => b.doctorId === selectedDoctor?.id && b.date === dateStr && b.time === timeStr
     );
     if (isLocallyBooked) return true;
 
-    // 2. For Dt. Yakup Aşar: check Doktorsitesi real-time schedule
-    if (selectedDoctor?.id === 'yakup-asar' && doktorsitesiData) {
-      const daySchedule = doktorsitesiData.scheduleByOffset?.[offsetIndex];
+    // 2. For Dt. Yakup Aşar: check Doktorsitesi live schedule (by exact date string)
+    if (selectedDoctor?.id === 'yakup-asar' && doktorsitesiData?.scheduleByDate) {
+      const daySchedule = doktorsitesiData.scheduleByDate[dateStr];
       if (daySchedule) {
-        if (daySchedule.busy?.includes(timeStr)) return true;
+        // Slot explicitly available → not booked
         if (daySchedule.available?.includes(timeStr)) return false;
+        // Slot explicitly busy → booked
+        if (daySchedule.busy?.includes(timeStr)) return true;
+        // Slot not listed for this day → treat as unavailable (clinic has no schedule)
         return true;
       }
-
-      if (doktorsitesiData.busySlots) {
-        const isBusy = doktorsitesiData.busySlots.some(
-          (slot) => slot.dateOffset === offsetIndex && slot.time === timeStr
-        );
-        if (isBusy) return true;
-      }
+      // Date not present in Doktorsitesi data → unknown, treat as unavailable
+      return true;
     }
 
     return false;
@@ -126,7 +124,25 @@ export default function AppointmentCalendar({
 
   // Get available slots for a given day (filtering past hours if today)
   const getDaySlots = (day) => {
-    let slots = ALL_TIME_SLOTS;
+    let slots;
+
+    // For Dt. Yakup Aşar with live data: only show slots that exist in Doktorsitesi
+    if (selectedDoctor?.id === 'yakup-asar' && doktorsitesiData?.scheduleByDate) {
+      const daySchedule = doktorsitesiData.scheduleByDate[day.fullDate];
+      if (!daySchedule) {
+        // Date not in Doktorsitesi data → clinic not working that day
+        return [];
+      }
+      // Combine available + busy slots from Doktorsitesi (sorted)
+      const allDaySlots = [
+        ...(daySchedule.available || []),
+        ...(daySchedule.busy || []),
+      ].sort();
+      slots = allDaySlots;
+    } else {
+      slots = ALL_TIME_SLOTS;
+    }
+
     if (day.isToday) {
       slots = slots.filter((time) => !isTimePastForToday(day.fullDate, time));
     }
@@ -172,29 +188,58 @@ export default function AppointmentCalendar({
         </div>
       ) : (
         selectedDoctor.id === 'yakup-asar' && (
-          <div className={styles.syncBanner}>
-            <div className={styles.syncPulse} />
-            <div className={styles.syncInfo}>
-              <span className={styles.syncTitle}>
-                ⚡ <strong>Doktorsitesi.com</strong> Canlı Takvim Senkronizasyonu Aktif
-              </span>
-              <span className={styles.syncSub}>
-                Randevu saatleri 30 dakikada bir otomatik taranır ve boşalan kontenjanlar anında açılır.
-              </span>
-            </div>
+          <>
+            {/* Error state: Doktorsitesi unreachable */}
+            {doktorsitesiData?.providerError && (
+              <div className={styles.syncErrorBanner}>
+                <span>⚠️ Randevu saatleri şu anda güncelleniyor. Lütfen birkaç saniye sonra tekrar deneyin.</span>
+                <button
+                  type="button"
+                  className={styles.syncRefreshBtn}
+                  onClick={onRefreshSync}
+                  disabled={isLoadingSync}
+                  aria-label="Tekrar dene"
+                >
+                  <RefreshCw size={14} className={isLoadingSync ? styles.syncSpinner : ''} />
+                  <span>{isLoadingSync ? 'Yükleniyor...' : 'Tekrar Dene'}</span>
+                </button>
+              </div>
+            )}
 
-            <button
-              type="button"
-              className={styles.syncRefreshBtn}
-              onClick={onRefreshSync}
-              disabled={isLoadingSync}
-              title="Doktorsitesi saatlerini anlık güncelle"
-              aria-label="Doktorsitesi senkronizasyonunu yenile"
-            >
-              <RefreshCw size={14} className={isLoadingSync ? styles.syncSpinner : ''} />
-              <span>{isLoadingSync ? 'Güncelleniyor...' : 'Yenile'}</span>
-            </button>
-          </div>
+            {/* Loading state */}
+            {isLoadingSync && !doktorsitesiData?.providerError && (
+              <div className={styles.syncLoadingBanner}>
+                <RefreshCw size={14} className={styles.syncSpinner} />
+                <span>Doktorsitesi takvimi yükleniyor...</span>
+              </div>
+            )}
+
+            {/* Active sync banner */}
+            {!doktorsitesiData?.providerError && !isLoadingSync && (
+              <div className={styles.syncBanner}>
+                <div className={styles.syncPulse} />
+                <div className={styles.syncInfo}>
+                  <span className={styles.syncTitle}>
+                    ⚡ <strong>Doktorsitesi.com</strong> Canlı Takvim Senkronizasyonu Aktif
+                  </span>
+                  <span className={styles.syncSub}>
+                    Randevu saatleri otomatik olarak güncellenir.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.syncRefreshBtn}
+                  onClick={onRefreshSync}
+                  disabled={isLoadingSync}
+                  title="Doktorsitesi saatlerini anlık güncelle"
+                  aria-label="Doktorsitesi senkronizasyonunu yenile"
+                >
+                  <RefreshCw size={14} />
+                  <span>Yenile</span>
+                </button>
+              </div>
+            )}
+          </>
         )
       )}
 
@@ -227,7 +272,7 @@ export default function AppointmentCalendar({
                   </div>
                 ) : (
                   daySlots.map((time) => {
-                    const booked = isSlotBooked(day.fullDate, time, day.offsetIndex);
+                    const booked = isSlotBooked(day.fullDate, time);
                     const isSelected = selectedDate === day.fullDate && selectedTime === time;
 
                     return (

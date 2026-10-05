@@ -77,7 +77,7 @@ export async function POST(request) {
       );
     }
 
-    // Check if slot is already booked
+    // Check if slot is already booked locally
     const isSlotTaken = appointments.some(
       (a) => a.doctorId === doctorId && a.date === date && a.time === time
     );
@@ -87,6 +87,68 @@ export async function POST(request) {
         { success: false, error: 'Seçtiğiniz randevu saati az önce rezerve edilmiştir. Lütfen başka bir saat seçiniz.' },
         { status: 409 }
       );
+    }
+
+    // For Dt. Yakup Aşar: re-validate against live Doktorsitesi data at booking time
+    // This prevents race conditions between display cache and actual availability.
+    if (doctorId === 'yakup-asar') {
+      try {
+        const dsRes = await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/appointments/doktorsitesi?refresh=true`,
+          { cache: 'no-store' }
+        );
+
+        if (!dsRes.ok) {
+          // Doktorsitesi unreachable at booking time — reject to avoid phantom bookings
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                'Randevu saatleri şu anda doğrulanamıyor. Lütfen birkaç saniye sonra tekrar deneyin.',
+            },
+            { status: 503 }
+          );
+        }
+
+        const dsData = await dsRes.json();
+
+        if (!dsData.success || !dsData.scheduleByDate) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                'Randevu saatleri şu anda doğrulanamıyor. Lütfen birkaç saniye sonra tekrar deneyin.',
+            },
+            { status: 503 }
+          );
+        }
+
+        const daySchedule = dsData.scheduleByDate[date];
+        if (daySchedule) {
+          // If slot is not explicitly in available list, reject it
+          const isAvailableOnDs = daySchedule.available?.includes(time);
+          if (!isAvailableOnDs) {
+            return NextResponse.json(
+              {
+                success: false,
+                error:
+                  'Seçtiğiniz saat Doktorsitesi takviminde müsait değil. Lütfen başka bir saat seçiniz.',
+              },
+              { status: 409 }
+            );
+          }
+        }
+      } catch (dsErr) {
+        console.error('[Appointments] Doktorsitesi re-validation error:', dsErr.message);
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'Randevu saatleri şu anda doğrulanamıyor. Lütfen birkaç saniye sonra tekrar deneyin.',
+          },
+          { status: 503 }
+        );
+      }
     }
 
     const newAppointment = {
