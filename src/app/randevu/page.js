@@ -16,6 +16,8 @@ import {
   MessageCircle,
   Clock,
   ShieldCheck,
+  IdCard,
+  Mail,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar/Navbar';
 import Footer from '@/components/Footer/Footer';
@@ -25,6 +27,34 @@ import AppointmentCalendar from '@/components/Appointment/AppointmentCalendar';
 import ToastNotification from '@/components/Appointment/ToastNotification';
 import { CLINIC } from '@/config/clinic';
 import styles from './page.module.css';
+
+// Helper to format Turkish mobile phone numbers: 05XX XXX XX XX (11 digits, starts with 05)
+function formatPhoneNumber(value) {
+  let digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+
+  if (digits.startsWith('5')) {
+    digits = '0' + digits;
+  } else if (!digits.startsWith('05')) {
+    if (digits.startsWith('0')) {
+      if (digits.length >= 2 && digits[1] !== '5') {
+        digits = '05' + digits.slice(1);
+      }
+    } else {
+      digits = '05' + digits;
+    }
+  }
+
+  digits = digits.slice(0, 11);
+
+  const parts = [];
+  if (digits.length > 0) parts.push(digits.slice(0, 4));
+  if (digits.length > 4) parts.push(digits.slice(4, 7));
+  if (digits.length > 7) parts.push(digits.slice(7, 9));
+  if (digits.length > 9) parts.push(digits.slice(9, 11));
+
+  return parts.join(' ');
+}
 
 function AppointmentContent() {
   const searchParams = useSearchParams();
@@ -40,7 +70,9 @@ function AppointmentContent() {
   // Form Fields
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [tcNo, setTcNo] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [gender, setGender] = useState('Kadın');
   const [selectedServices, setSelectedServices] = useState([]);
   const [notes, setNotes] = useState('');
@@ -154,8 +186,23 @@ function AppointmentContent() {
       setFormError('Lütfen ad ve soyadınızı giriniz.');
       return;
     }
-    if (!phone.trim() || phone.trim().length < 10) {
-      setFormError('Lütfen geçerli bir telefon numarası giriniz.');
+    if (!tcNo.trim() || tcNo.trim().length !== 11) {
+      setFormError('Lütfen TC Kimlik Numaranızı Kontrol Ediniz');
+      return;
+    }
+    const rawPhone = phone.replace(/\D/g, '');
+    if (!rawPhone.startsWith('05')) {
+      setFormError('Telefon numarası 05 ile başlamalıdır.');
+      return;
+    }
+    if (rawPhone.length !== 11) {
+      setFormError('Lütfen 11 haneli telefon numaranızı eksiksiz giriniz (Örn: 05XX XXX XX XX).');
+      return;
+    }
+    const trimmedEmail = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[cC][oO][mM](\.[a-zA-Z]{2,})?$/i;
+    if (!trimmedEmail || !trimmedEmail.includes('@') || !trimmedEmail.toLowerCase().includes('.com') || !emailRegex.test(trimmedEmail)) {
+      setFormError('Lütfen geçerli bir e-posta adresi giriniz (Örn: example@gmail.com).');
       return;
     }
     if (selectedServices.length === 0) {
@@ -173,7 +220,9 @@ function AppointmentContent() {
         time: selectedTime,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        tcNo: tcNo.trim(),
         phone: phone.trim(),
+        email: trimmedEmail.toLowerCase(),
         gender,
         services: selectedServices,
         notes: notes.trim(),
@@ -230,7 +279,9 @@ function AppointmentContent() {
     setSelectedTime('');
     setFirstName('');
     setLastName('');
+    setTcNo('');
     setPhone('');
+    setEmail('');
     setSelectedServices([]);
     setNotes('');
     setLastAppointment(null);
@@ -293,12 +344,24 @@ function AppointmentContent() {
                     </strong>
                   </div>
                   <div className={styles.summaryRow}>
-                    <span className={styles.summaryLabel}>Hizmetler:</span>
-                    <strong className={styles.summaryVal}>{lastAppointment.services.join(', ')}</strong>
+                    <span className={styles.summaryLabel}>T.C. Kimlik No:</span>
+                    <strong className={styles.summaryVal}>
+                      {lastAppointment.tcNo
+                        ? `${lastAppointment.tcNo.slice(0, 3)}*****${lastAppointment.tcNo.slice(-3)}`
+                        : '-'}
+                    </strong>
                   </div>
                   <div className={styles.summaryRow}>
                     <span className={styles.summaryLabel}>Telefon:</span>
                     <strong className={styles.summaryVal}>{lastAppointment.phone}</strong>
+                  </div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>E-posta:</span>
+                    <strong className={styles.summaryVal}>{lastAppointment.email || '-'}</strong>
+                  </div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Hizmetler:</span>
+                    <strong className={styles.summaryVal}>{lastAppointment.services.join(', ')}</strong>
                   </div>
                 </div>
 
@@ -453,6 +516,38 @@ function AppointmentContent() {
                         </div>
                       </div>
 
+                      {/* TC Kimlik No */}
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.label}>
+                          <span>T.C. Kimlik Numarası</span>
+                          <span className={styles.required}>*</span>
+                        </label>
+                        <div className={styles.inputIconWrapper}>
+                          <IdCard size={16} className={styles.inputIcon} />
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]{11}"
+                            maxLength={11}
+                            required
+                            placeholder="11 haneli T.C. Kimlik Numaranız"
+                            title="Lütfen TC Kimlik Numaranızı Kontrol Ediniz"
+                            className={`${styles.input} ${styles.inputWithIcon}`}
+                            value={tcNo}
+                            onInvalid={(e) => {
+                              e.target.setCustomValidity('Lütfen TC Kimlik Numaranızı Kontrol Ediniz');
+                            }}
+                            onInput={(e) => {
+                              e.target.setCustomValidity('');
+                            }}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                              setTcNo(val);
+                            }}
+                          />
+                        </div>
+                      </div>
+
                       {/* Phone */}
                       <div className={styles.fieldGroup}>
                         <label className={styles.label}>
@@ -463,11 +558,40 @@ function AppointmentContent() {
                           <Phone size={16} className={styles.inputIcon} />
                           <input
                             type="tel"
+                            inputMode="numeric"
                             required
+                            maxLength={14}
                             placeholder="05XX XXX XX XX"
                             className={`${styles.input} ${styles.inputWithIcon}`}
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.label}>
+                          <span>E-posta Adresi</span>
+                          <span className={styles.required}>*</span>
+                        </label>
+                        <div className={styles.inputIconWrapper}>
+                          <Mail size={16} className={styles.inputIcon} />
+                          <input
+                            type="email"
+                            required
+                            placeholder="example@gmail.com"
+                            title="Lütfen geçerli bir e-posta adresi giriniz (Örn: example@gmail.com)"
+                            pattern="^[^\s@]+@[^\s@]+\.[cC][oO][mM](\.[a-zA-Z]{2,})?$"
+                            className={`${styles.input} ${styles.inputWithIcon}`}
+                            value={email}
+                            onInvalid={(e) => {
+                              e.target.setCustomValidity('Lütfen geçerli bir e-posta adresi giriniz (Örn: example@gmail.com)');
+                            }}
+                            onInput={(e) => {
+                              e.target.setCustomValidity('');
+                            }}
+                            onChange={(e) => setEmail(e.target.value)}
                           />
                         </div>
                       </div>
