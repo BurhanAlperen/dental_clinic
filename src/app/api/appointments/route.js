@@ -67,12 +67,39 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const { doctorId, doctorName, date, time, firstName, lastName, phone, gender, services, notes } = data;
+    const { doctorId, doctorName, date, time, firstName, lastName, tcNo, phone, email, gender, services, notes } = data;
 
     // Validation
-    if (!doctorId || !date || !time || !firstName || !lastName || !phone || !gender || !services || services.length === 0) {
+    if (!doctorId || !date || !time || !firstName || !lastName || !tcNo || !phone || !email || !gender || !services || services.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Lütfen tüm zorunlu alanları doldurunuz.' },
+        { status: 400 }
+      );
+    }
+
+    // T.C. Kimlik No 11-digit validation
+    if (!/^\d{11}$/.test(String(tcNo).trim())) {
+      return NextResponse.json(
+        { success: false, error: 'T.C. Kimlik Numarası 11 haneli olmalıdır.' },
+        { status: 400 }
+      );
+    }
+
+    // Telefon numarası validasyonu: 05 ile başlamalı ve 11 haneli olmalı
+    const rawPhone = String(phone).replace(/\D/g, '');
+    if (!rawPhone.startsWith('05') || rawPhone.length !== 11) {
+      return NextResponse.json(
+        { success: false, error: 'Telefon numarası 05 ile başlamalı ve 11 haneli olmalıdır (05XX XXX XX XX).' },
+        { status: 400 }
+      );
+    }
+
+    // E-posta validasyonu: @ ve .com zorunlu
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[cC][oO][mM](\.[a-zA-Z]{2,})?$/i;
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.com') || !emailRegex.test(cleanEmail)) {
+      return NextResponse.json(
+        { success: false, error: 'Lütfen geçerli bir e-posta adresi giriniz (Örn: example@gmail.com).' },
         { status: 400 }
       );
     }
@@ -159,7 +186,9 @@ export async function POST(request) {
       time,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      tcNo: String(tcNo).trim(),
       phone: phone.trim(),
+      email: cleanEmail,
       gender,
       services: Array.isArray(services) ? services : [services],
       notes: notes ? notes.trim() : '',
