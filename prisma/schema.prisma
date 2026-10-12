@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Kullanıcı rolleri
+enum UserRole {
+  DOCTOR
+  SUPER_ADMIN
+}
+
+// Randevu durumları
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// Hasta formundaki cinsiyet seçeneği
+enum Gender {
+  FEMALE
+  MALE
+  UNSPECIFIED
+}
+
+// Sisteme giriş yapan kullanıcılar
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(150)
+  email        String   @unique @db.VarChar(191)
+  passwordHash String   @db.VarChar(255)
+  role         UserRole @default(DOCTOR)
+  isActive     Boolean  @default(true)
+
+  doctor       Doctor?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([role, isActive])
+}
+
+// Doktor profilleri
+model Doctor {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique
+  title         String?  @db.VarChar(100)
+  specialtyTitle String? @db.VarChar(150)
+  specialty     String?  @db.VarChar(191)
+  photoUrl      String?  @db.VarChar(500)
+  bio           String?  @db.Text
+  isActive      Boolean  @default(true)
+
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  appointments  Appointment[]
+  availabilities DoctorAvailability[]
+  blockedTimes  DoctorBlockedTime[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// Hastalar
+model Patient {
+  id          Int      @id @default(autoincrement())
+  firstName   String   @db.VarChar(100)
+  lastName    String   @db.VarChar(100)
+  nationalId  String?  @unique @db.VarChar(11)
+  phone       String   @db.VarChar(30)
+  email       String   @db.VarChar(191)
+  gender      Gender
+  notes       String?  @db.Text
+
+  appointments Appointment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([phone])
+  @@index([lastName, firstName])
+}
+
+// Hastaların seçebileceği tedavi ve hizmetler
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(191)
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+
+  appointmentServices AppointmentService[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// Randevular
+model Appointment {
+  id              Int               @id @default(autoincrement())
+  doctorId        Int
+  patientId       Int
+  startAt         DateTime
+  endAt           DateTime
+  status          AppointmentStatus @default(PENDING)
+  patientNotes    String?            @db.Text
+  cancellationReason String?         @db.VarChar(500)
+
+  doctor          Doctor             @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  patient         Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  services        AppointmentService[]
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([doctorId, startAt, endAt])
+  @@index([doctorId, status, startAt])
+  @@index([patientId, startAt])
+}
+
+// Bir randevuda seçilen bir veya daha fazla hizmet
+model AppointmentService {
+  appointmentId Int
+  serviceId     Int
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  service       Service     @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  // Aynı hizmet aynı randevuya iki kez eklenmesin.
+  @@id([appointmentId, serviceId])
+  @@index([serviceId])
+}
+
+// Doktorun haftalık çalışma saatleri
+model DoctorAvailability {
+  id           Int      @id @default(autoincrement())
+  doctorId     Int
+  dayOfWeek    Int
+  startMinute  Int
+  endMinute    Int
+  isActive     Boolean  @default(true)
+
+  doctor       Doctor   @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([doctorId, dayOfWeek, isActive])
+}
+
+// Doktorun izinleri, molaları ve kapalı zamanları
+model DoctorBlockedTime {
+  id          Int      @id @default(autoincrement())
+  doctorId    Int
+  startAt     DateTime
+  endAt       DateTime
+  reason      String?  @db.VarChar(255)
+
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([doctorId, startAt, endAt])
+}
