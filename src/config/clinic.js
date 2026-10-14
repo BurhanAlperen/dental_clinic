@@ -120,10 +120,10 @@ export const CLINIC = {
   ],
 
   reviews: {
-    rating: 4.9,
-    totalReviews: 52,
+    rating: 4.8,
+    totalReviews: 58,
     googleUrl:
-      'https://www.google.com/maps/place/%C3%96zel+Turhal+A%C4%9F%C4%B1z+ve+Di%C5%9F+Sa%C4%9Fl%C4%B1%C4%9F%C4%B1+Poliklinigi/@40.3864065,36.087801,19.16z/data=!4m6!3m5!1s0x407ded9665c9cefb:0xbadfd9be4dfcd36!8m2!3d40.3863543!4d36.0882364!16s%2Fg%2F11rctz_d1w?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D',
+      'https://www.google.com/maps/place/%C3%96zel+Turhal+A%C4%9F%C4%B1z+ve+Di%C5%9F+Sa%C4%9Fl%C4%B1%C4%9F%C4%B1+Poliklinigi/@40.3861276,36.0879089,781m/data=!3m1!1e3!4m8!3m7!1s0x407ded9665c9cefb:0xbadfd9be4dfcd36!8m2!3d40.3863543!4d36.0882364!9m1!1b1!16s%2Fg%2F11rctz_d1w!5m1!1e2?entry=ttu&g_ep=EgoyMDI2MTAwNS4wIKXMDSoASAFQAw%3D%3D',
   },
 
   whatsappTemplate: (data) =>
