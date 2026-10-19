@@ -28,22 +28,10 @@ import ToastNotification from '@/components/Appointment/ToastNotification';
 import { CLINIC } from '@/config/clinic';
 import styles from './page.module.css';
 
-// Helper to format Turkish mobile phone numbers: 05XX XXX XX XX (11 digits, starts with 05)
+// Helper to format Turkish mobile phone numbers: 05XX XXX XX XX (11 digits, manually entered)
 function formatPhoneNumber(value) {
   let digits = value.replace(/\D/g, '');
   if (!digits) return '';
-
-  if (digits.startsWith('5')) {
-    digits = '0' + digits;
-  } else if (!digits.startsWith('05')) {
-    if (digits.startsWith('0')) {
-      if (digits.length >= 2 && digits[1] !== '5') {
-        digits = '05' + digits.slice(1);
-      }
-    } else {
-      digits = '05' + digits;
-    }
-  }
 
   digits = digits.slice(0, 11);
 
